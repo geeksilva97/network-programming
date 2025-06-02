@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <time.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define MAXLINE 4096 /* max text line length */
 /* Following could be derived from SOMAXCONN in <sys/socket.h>, but many
@@ -18,8 +19,20 @@ void err_sys(const char *x) {
   exit(1);
 }
 
+int listenfd;
+
+void signal_handler(int signum) {
+  printf("\nReceived signal %d, shutting down server...\n", signum);
+  if (listenfd >= 0) {
+    close(listenfd);
+    printf("Closed listening socket.\n");
+  }
+  exit(0);
+}
+
 int main() {
-  int listenfd, connfd;
+  signal(SIGINT, signal_handler);
+  int connfd;
   struct sockaddr_in serveraddr;
   time_t ticks;
   char buff[MAXLINE];
